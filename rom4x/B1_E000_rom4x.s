@@ -83,6 +83,7 @@ ckkey2:   sec
           bmi menu4x                ; < 0 not valid
           cmp #$08
           bpl menu4x                ; > 7 not valid
+
           sta power2 + rx_mslot     ; for boot4x
           stz softev + 1            ; deinit coldstart
           stz pwerdup               ; ditto
@@ -162,18 +163,10 @@ msg3:     .byte $05,$b0,"SURE? ",$00
           jsr ntitle                ; "Apple //c"
           jsr rdrecov               ; try to recover ramdisk
           lda power2 + rx_mslot     ; get action saved by reset4x
-          beq :+                    ; unset, go look for config on ram card
+          bne :+                    ; set, so go honor it
+          lda #5                    ; unset, default to smartport/hdd
+:
           pha                       ; save it
-          bra selboot               ; now go do it
-:         lda numbanks,y            ; (y should be set in rdrecov) ram card present?
-          beq boot6                 ; nope, boot slot 6
-          jsr getcfg                ; try to get config
-          bcs boot4                 ; no config, normal boot
-          ;stx $7d2
-          ;sty $7d3
-          phx                       ; config present, save it and move on
-          lda #'C'                  ; tell user
-          sta $7d1                  ; on screen
 selboot:  ldx #(msg2-msg1)          ; short offset
           jsr disp                  ; display it
           pla                       ; get boot selection from stack
